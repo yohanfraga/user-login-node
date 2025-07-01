@@ -1,0 +1,10 @@
+export const AlreadyExists = '{0} with this {1} already exists';
+export const InvalidInput = 'Invalid {0}';
+export const InternalServerError = 'InternalServerError';
+export const NotFoundError = '{0} not found';
+export const UnauthorizedError = 'UnauthorizedError';
+export const ForbiddenError = 'ForbiddenError';
+export const BadRequestError = 'BadRequestError';
+export const UnprocessableEntityError = 'UnprocessableEntityError';
+export const TooManyRequestsError = 'TooManyRequestsError';
+export const ServiceUnavailableError = 'ServiceUnavailableError';
