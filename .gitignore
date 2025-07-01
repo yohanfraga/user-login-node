@@ -5,5 +5,4 @@
 /dist
 
 # dotenv
-.env 
 /src/generated/prisma
