@@ -1,30 +1,24 @@
-import { Request, Response, RequestHandler } from 'express';
-import { createUser, findUserByEmail, findUserById } from './user.service';
-import { CreateUserInput, PublicUser } from './user.types';
-import { getNotifications } from '../../utils/notification/notification.handler';
-import { interpolateError } from '../../utils/error/errors.interpolation';
-import { NotFoundError } from '../../utils/error/errors';
+import { Request, Response } from 'express';
+import { userService } from './user.service';
+import { BaseController } from '../../utils/controller/base.controller';
 
-export const registerUserHandler: RequestHandler<unknown, unknown, CreateUserInput> = async (req, res) => {
-    const user = await createUser(req.body);
-    
-    if (user) {
-        res.status(201).json(user);
-    }
-}; 
+export class UserController extends BaseController {
+  async registerUser(req: Request, res: Response): Promise<void> {
+    const user = await userService.createUser(req.body);
+    user ? this.sendCreated(res, user) : this.sendError(res);
+  }
 
-export const findUserByEmailHandler: RequestHandler<{ email: string }, unknown, PublicUser> = async (req, res) => {
-    const user = await findUserByEmail(req.params.email);
-    
-    if (user) {
-        res.status(200).json(user);
-    }
-};
+  async findUserByEmail(req: Request, res: Response): Promise<void> {
+    const email = req.query.email as string;
+    const user = await userService.findUserByEmail(email);
+    user ? this.sendSuccess(res, user) : this.sendNotFound(res);
+  }
 
-export const findUserByIdHandler: RequestHandler<{ id: string }, unknown, PublicUser> = async (req, res) => {
-    const user = await findUserById(req.params.id);
-    
-    if (user) {
-        res.status(200).json(user);
-    }
-};
+  async getCurrentUser(req: Request, res: Response): Promise<void> {
+    const userId = (req as any).user?.userId;
+    const user = await userService.getCurrentUser(userId);
+    user ? this.sendSuccess(res, user) : this.sendNotFound(res);
+  }
+}
+
+export const userController = new UserController();

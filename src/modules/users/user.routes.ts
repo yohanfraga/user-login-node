@@ -1,46 +1,128 @@
 import { Router } from 'express';
-import { findUserByEmailHandler, findUserByIdHandler, registerUserHandler } from './user.controller';
+import { userController } from './user.controller';
+import { authMiddleware } from '../../middlewares/authMiddleware';
 
 const router = Router();
 
 /**
- * @openapi
- * /api/users/register_user:
+ * @swagger
+ * components:
+ *   schemas:
+ *     CreateUserRequest:
+ *       type: object
+ *       required:
+ *         - name
+ *         - email
+ *         - password
+ *       properties:
+ *         name:
+ *           type: string
+ *           description: User's full name
+ *         email:
+ *           type: string
+ *           format: email
+ *           description: User's email address
+ *         password:
+ *           type: string
+ *           format: password
+ *           description: User's password
+ *     UserResponse:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: User's unique identifier
+ *         name:
+ *           type: string
+ *           description: User's full name
+ *         email:
+ *           type: string
+ *           format: email
+ *           description: User's email address
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: User creation timestamp
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Last update timestamp
+ */
+
+/**
+ * @swagger
+ * /users/register:
  *   post:
- *     tags:
- *       - Users
  *     summary: Register a new user
+ *     tags: [Users]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 default: test.user@example.com
- *               password:
- *                 type: string
- *                 default: '123456'
- *               name:
- *                 type: string
- *                 default: 'Test User'
+ *             $ref: '#/components/schemas/CreateUserRequest'
  *     responses:
  *       201:
- *         description: Created
+ *         description: User created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
  *       400:
- *         description: Bad Request
- *       500:
- *         description: Internal Server Error
+ *         description: Invalid request body
+ *       409:
+ *         description: Email already exists
  */
-router.post('/register_user', registerUserHandler);
+router.post('/register_user', (req, res) => userController.registerUser(req, res));
 
-router.get('/find_user_by_email/:email', findUserByEmailHandler);
+/**
+ * @swagger
+ * /users/me:
+ *   get:
+ *     summary: Get current user profile
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ */
+router.get('/me', authMiddleware, (req, res) => userController.getCurrentUser(req, res));
 
-router.get('/find_user_by_id/:id', findUserByIdHandler);
+/**
+ * @swagger
+ * /users/find_user_by_email:
+ *   get:
+ *     summary: Find user by email
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: email
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: email
+ *         description: User's email address
+ *     responses:
+ *       200:
+ *         description: User found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       404:
+ *         description: User not found
+ */
+router.get('/find_user_by_email', (req, res) => userController.findUserByEmail(req, res));
 
 export default router; 

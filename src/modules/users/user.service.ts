@@ -1,73 +1,89 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, User } from '@prisma/client';
 import bcrypt from 'bcrypt';
-import { CreateUserInput, PublicUser } from './user.types';
-import { addNotification, addValidationNotifications } from '../../utils/notification/notification.handler';
+import { CreateUserRequest, UserResponse } from './user.types';
+import { notificationHandler } from '../../utils/notification/notification.handler';
 import { createUserSchema } from './user.validate';
 import { AlreadyExists, NotFoundError } from '../../utils/error/errors';
 import { interpolateError } from '../../utils/error/errors.interpolation';
 
 const prisma = new PrismaClient();
+
 const SALT_ROUNDS = 10;
 const registerUserPath = '/register_user';
 const findUserByEmailPath = '/find_user_by_email';
-const findUserByIdPath = '/find_user_by_id';
+const getCurrentUserPath = '/me';
 
-export async function createUser(input: CreateUserInput): Promise<PublicUser | null> {
-  const { email, password, name } = input;
+export class UserService {
+  async createUser(input: CreateUserRequest): Promise<UserResponse | null> {
+    const { email, password, name } = input;
 
-  const existingUser = await prisma.user.findUnique({
-    where: { email },
-  });
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
 
-  if (existingUser) {
-    addNotification(registerUserPath, interpolateError(AlreadyExists, 'User', 'email'));
-    return null;
+    if (existingUser) {
+      notificationHandler.addNotification(registerUserPath, interpolateError(AlreadyExists, 'User', 'email'));
+      return null;
+    }
+
+    const validatedInput = createUserSchema.safeParse(input);
+
+    if (!validatedInput.success) {
+      notificationHandler.addValidationNotifications(registerUserPath, validatedInput.error.errors);
+      return null;
+    }
+
+    const hashedPassword = await this.hashPassword(password);
+
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name,
+      },
+    });
+
+    return this.mapToUserResponse(user);
   }
 
-  const validatedInput = createUserSchema.safeParse(input);
+  async findUserByEmail(email: string): Promise<UserResponse | null> {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
 
-  if (!validatedInput.success) {
-    addValidationNotifications(registerUserPath, validatedInput.error.errors);
-    return null;
+    if (!user) {
+      notificationHandler.addNotification(findUserByEmailPath, interpolateError(NotFoundError, 'User'));
+      return null;
+    }
+
+    return this.mapToUserResponse(user);
   }
 
-  const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+  async getCurrentUser(userId: string): Promise<UserResponse | null> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+    
+    if (!user) {
+      notificationHandler.addNotification(getCurrentUserPath, interpolateError(NotFoundError, 'User'));
+      return null;
+    }
 
-  const user = await prisma.user.create({
-    data: {
-      email,
-      password: hashedPassword,
-      name,
-    },
-  });
-
-  const { password: _, ...userWithoutPassword } = user;
-
-  return userWithoutPassword;
-}
-
-export async function findUserByEmail(email: string): Promise<PublicUser | null>  {
-  var user = await prisma.user.findUnique({
-    where: { email },
-  });
-
-  if (!user) {
-    addNotification(findUserByEmailPath, interpolateError(NotFoundError, 'User', 'email'));
-    return null;
+    return this.mapToUserResponse(user);
   }
 
-  return user;
+  private mapToUserResponse(user: User): UserResponse {
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt,
+    };
+  }
+
+  private async hashPassword(password: string): Promise<string> {
+    return bcrypt.hash(password, SALT_ROUNDS);
+  }
 } 
 
-export async function findUserById(id: string): Promise<PublicUser | null>  {
-  var user = await prisma.user.findUnique({
-    where: { id },
-  });
-
-  if (!user) {
-    addNotification(findUserByIdPath, interpolateError(NotFoundError, 'User', 'id'));
-    return null;
-  }
-
-  return user;
-} 
+export const userService = new UserService();

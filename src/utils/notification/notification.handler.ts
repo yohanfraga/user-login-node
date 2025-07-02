@@ -1,26 +1,30 @@
 import { ZodIssue } from "zod";
 import { Notification } from "./notification.types";
 
-const notifications: Notification[] = [];
+export class NotificationHandler {
+    private notifications: Notification[] = [];
 
-export const addNotification = (path: string, message: string) => {
-    notifications.push({ path, message });
-}
+    public addNotification = (path: string, message: string) => {
+        this.notifications.push({ path, message });
+    }
 
-export const getNotifications = () => {
-    return notifications;
-}
+    public getNotifications = () => {
+        return this.notifications;
+    }
 
-export const clearNotifications = () => {
-    notifications.length = 0;
-}
+    public clearNotifications = () => {
+        this.notifications.length = 0;
+    }
 
-export const hasNotifications = () => {
-    return notifications.length > 0;
-}
+    public hasNotifications = () => {
+        return this.notifications.length > 0;
+    }
 
-export const addValidationNotifications = (path: string, issues: ZodIssue[]) => {
-    for (const issue of issues) {
-        notifications.push({ path, message: `Field ${issue.path} ${issue.message}` });
+    public addValidationNotifications = (path: string, issues: ZodIssue[]) => {
+        for (const issue of issues) {
+            this.notifications.push({ path, message: `Field ${issue.path} ${issue.message}` });
+        }
     }
 }
+
+export const notificationHandler = new NotificationHandler();
