@@ -22,6 +22,64 @@ const options: swaggerJsdoc.Options = {
                     bearerFormat: 'JWT',
                 },
             },
+            responses: {
+                UnauthorizedError: {
+                    description: 'Authentication failed',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    success: {
+                                        type: 'boolean',
+                                        example: false
+                                    },
+                                    notifications: {
+                                        type: 'object',
+                                        properties: {
+                                            auth: {
+                                                type: 'array',
+                                                items: {
+                                                    type: 'string'
+                                                },
+                                                example: ['Authorization header is missing']
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                ForbiddenError: {
+                    description: 'Access forbidden',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    success: {
+                                        type: 'boolean',
+                                        example: false
+                                    },
+                                    notifications: {
+                                        type: 'object',
+                                        properties: {
+                                            auth: {
+                                                type: 'array',
+                                                items: {
+                                                    type: 'string'
+                                                },
+                                                example: ['User does not have the required role']
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         },
         security: [
             {

@@ -5,6 +5,7 @@ import { notificationHandler } from '../../utils/notification/notification.handl
 import { createUserSchema } from './user.validate';
 import { AlreadyExists, NotFoundError } from '../../utils/error/errors';
 import { interpolateError } from '../../utils/error/errors.interpolation';
+import { Roles } from '../../utils/roles/roles';
 
 const prisma = new PrismaClient();
 
@@ -40,6 +41,11 @@ export class UserService {
         email,
         password: hashedPassword,
         name,
+        roles: {
+          create: {
+            roleId: this.visitorRoleId
+          }
+        }
       },
     });
 
@@ -84,6 +90,8 @@ export class UserService {
   private async hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, SALT_ROUNDS);
   }
+
+  private readonly visitorRoleId = 'clhz2fmk9000308mda2xc1p4q';
 } 
 
 export const userService = new UserService();

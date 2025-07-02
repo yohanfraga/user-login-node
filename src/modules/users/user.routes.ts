@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { userController } from './user.controller';
 import { authMiddleware } from '../../middlewares/authMiddleware';
+import { Roles } from '../../utils/roles/roles';
 
 const router = Router();
 
@@ -73,7 +74,7 @@ const router = Router();
  *       409:
  *         description: Email already exists
  */
-router.post('/register_user', (req, res) => userController.registerUser(req, res));
+router.post('/register', (req, res) => userController.registerUser(req, res));
 
 /**
  * @swagger
@@ -91,9 +92,13 @@ router.post('/register_user', (req, res) => userController.registerUser(req, res
  *             schema:
  *               $ref: '#/components/schemas/UserResponse'
  *       401:
- *         description: Unauthorized - Invalid or missing token
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *     description: |
+ *       Requires one of the following roles: USER, ADMIN, VISITOR
  */
-router.get('/me', authMiddleware, (req, res) => userController.getCurrentUser(req, res));
+router.get('/me', authMiddleware([Roles.USER, Roles.ADMIN, Roles.VISITOR]), (req, res) => userController.getCurrentUser(req, res));
 
 /**
  * @swagger
@@ -119,10 +124,14 @@ router.get('/me', authMiddleware, (req, res) => userController.getCurrentUser(re
  *             schema:
  *               $ref: '#/components/schemas/UserResponse'
  *       401:
- *         description: Unauthorized - Invalid or missing token
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
  *       404:
  *         description: User not found
+ *     description: |
+ *       Requires one of the following roles: ADMIN, USER
  */
-router.get('/find_user_by_email', (req, res) => userController.findUserByEmail(req, res));
+router.get('/find_user_by_email', authMiddleware([Roles.ADMIN, Roles.USER]), (req, res) => userController.findUserByEmail(req, res));
 
 export default router; 

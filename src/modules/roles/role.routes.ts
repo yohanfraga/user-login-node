@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { roleController } from './role.controller';
 import { authMiddleware } from '../../middlewares/authMiddleware';
+import { Roles } from '../../utils/roles/roles';
 
 const router = Router();
 
@@ -32,9 +33,13 @@ const router = Router();
  *                     type: string
  *                     description: The role description
  *       401:
- *         description: Unauthorized - Invalid or missing token
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *     description: |
+ *       Requires role: ADMIN
  */
-router.get('/', authMiddleware, (req, res) => roleController.getAllRoles(req, res));
+router.get('/', authMiddleware([Roles.ADMIN]), (req, res) => roleController.getAllRoles(req, res));
 
 /**
  * @swagger
@@ -79,10 +84,14 @@ router.get('/', authMiddleware, (req, res) => roleController.getAllRoles(req, re
  *                   format: date-time
  *                   description: When the role was assigned
  *       401:
- *         description: Unauthorized - Invalid or missing token
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
  *       404:
  *         description: User or role not found
+ *     description: |
+ *       Requires role: ADMIN
  */
-router.post('/assign', authMiddleware, (req, res) => roleController.assignRole(req, res));
+router.post('/assign', authMiddleware([Roles.ADMIN]), (req, res) => roleController.assignRole(req, res));
 
 export default router; 

@@ -14,6 +14,17 @@ export class AuthService {
   async login(data: LoginRequest): Promise<AuthResponse | null> {
     const user = await prisma.user.findUnique({
       where: { email: data.email },
+      include: {
+        roles: {
+          select: {
+            role: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!user) {
@@ -38,6 +49,7 @@ export class AuthService {
       userId: user.id,
       name: user.name,
       email: user.email,
+      roles: user.roles.map((userRole) => userRole.role.name),
     });
 
     const expiresInMinutes = ENV.JWT_EXPIRES_IN;
