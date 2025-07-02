@@ -79,7 +79,7 @@ Valid token with correct roles:
       "id": "user-id",
       "name": "John Doe",
       "email": "john@example.com",
-      "roles": ["ADMIN", "USER"]
+      "roles": ["Admin", "User"]
     }
   }
 }
@@ -103,7 +103,7 @@ You can implement role-based protection in your own endpoints in two ways:
 ```typescript
 import { authMiddleware } from '../middlewares/authMiddleware';
 
-router.get('/your-endpoint', authMiddleware(['ADMIN', 'USER']), (req, res) => {
+router.get('/your-endpoint', authMiddleware([Roles.ADMIN, Roles.USER]), (req, res) => {
   // Your endpoint logic here
 });
 ```
@@ -111,7 +111,7 @@ router.get('/your-endpoint', authMiddleware(['ADMIN', 'USER']), (req, res) => {
 2. Using the Validation Endpoint:
 ```typescript
 // First, validate the token and roles
-const response = await fetch('/api/auth/validate?roles=ADMIN,USER', {
+const response = await fetch('/api/auth/validate?roles=Admin,User', {
   headers: {
     'Authorization': 'Bearer ' + token
   }
