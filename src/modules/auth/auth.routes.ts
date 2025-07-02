@@ -84,4 +84,55 @@ const router = Router();
  */
 router.post('/login', (req, res) => authController.login(req, res));
 
+/**
+ * @swagger
+ * /auth/validate:
+ *   get:
+ *     summary: Validate a JWT token and check roles
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: roles
+ *         schema:
+ *           type: string
+ *         description: Comma-separated list of roles to check (e.g., "ADMIN,USER")
+ *     responses:
+ *       200:
+ *         description: Token is valid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     valid:
+ *                       type: boolean
+ *                       example: true
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                         email:
+ *                           type: string
+ *                         roles:
+ *                           type: array
+ *                           items:
+ *                             type: string
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ */
+router.get('/validate', (req, res) => authController.validateToken(req, res));
+
 export default router; 

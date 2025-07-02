@@ -74,6 +74,41 @@ export class AuthService {
     };
   }
 
+  async validateToken(token: string, requiredRoles: string[] = []): Promise<{ valid: boolean; user?: any }> {
+    try {
+      const decoded = jwt.verify(token, ENV.JWT_SECRET) as JwtPayload;
+      
+      if (decoded.roles.length === 0) {
+        notificationHandler.addNotification('auth', 'User does not have any roles');
+        return { valid: false };
+      }
+
+      if (requiredRoles.length > 0 && !decoded.roles.some(role => requiredRoles.includes(role))) {
+        notificationHandler.addNotification('auth', 'User does not have the required role');
+        return { valid: false };
+      }
+      
+      return {
+        valid: true,
+        user: {
+          id: decoded.userId,
+          name: decoded.name,
+          email: decoded.email,
+          roles: decoded.roles
+        }
+      };
+    } catch (error) {
+      if (error instanceof jwt.JsonWebTokenError) {
+        notificationHandler.addNotification('auth', 'Invalid token');
+      } else if (error instanceof jwt.TokenExpiredError) {
+        notificationHandler.addNotification('auth', 'Token has expired');
+      } else {
+        notificationHandler.addNotification('auth', 'Error validating token');
+      }
+      return { valid: false };
+    }
+  }
+
   async verifyToken(token: string): Promise<JwtPayload> {
     return jwt.verify(token, ENV.JWT_SECRET) as JwtPayload;
   }

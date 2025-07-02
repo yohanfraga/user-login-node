@@ -58,6 +58,73 @@ The API implements a comprehensive role-based access control system:
 - `GET /api/roles` - Accessible by ADMIN only
 - `POST /api/roles/assign` - Accessible by ADMIN only
 
+### Token Validation System
+
+The API provides a dedicated endpoint for token validation and role checking:
+
+```http
+GET /api/auth/validate?roles=ADMIN,USER
+Authorization: Bearer your-jwt-token
+```
+
+#### Response Examples
+
+Valid token with correct roles:
+```json
+{
+  "success": true,
+  "data": {
+    "valid": true,
+    "user": {
+      "id": "user-id",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "roles": ["ADMIN", "USER"]
+    }
+  }
+}
+```
+
+Invalid token or missing roles:
+```json
+{
+  "success": false,
+  "notifications": {
+    "auth": ["User does not have the required role"]
+  }
+}
+```
+
+#### Using in Your Own Endpoints
+
+You can implement role-based protection in your own endpoints in two ways:
+
+1. Using the Auth Middleware:
+```typescript
+import { authMiddleware } from '../middlewares/authMiddleware';
+
+router.get('/your-endpoint', authMiddleware(['ADMIN', 'USER']), (req, res) => {
+  // Your endpoint logic here
+});
+```
+
+2. Using the Validation Endpoint:
+```typescript
+// First, validate the token and roles
+const response = await fetch('/api/auth/validate?roles=ADMIN,USER', {
+  headers: {
+    'Authorization': 'Bearer ' + token
+  }
+});
+
+if (response.data.valid) {
+  // User has required roles, proceed with operation
+  const userData = response.data.user;
+} else {
+  // Handle unauthorized access
+}
+```
+
 ### Error Responses for Role-Based Access
 
 When role-based access is denied, the API returns:
