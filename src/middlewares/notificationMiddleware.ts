@@ -11,7 +11,12 @@ export const notificationMiddleware = (req: Request, res: Response, next: NextFu
       return originalJson.call(res, data);
     }
 
-    return originalJson.call(res, notifications);
+    const response = {
+      success: false,
+      notifications: notifications,
+    };
+
+    return originalJson.call(res, response);
   };
 
   notificationHandler.clearNotifications();
